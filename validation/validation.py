@@ -17,8 +17,8 @@ class CrossValidator:
         n_folds: int = 3,
         n_days_per_fold: int = 7,
         filter_already_seen: bool = True,
-        filter_cold_items = True,
-        filter_cold_users = True,
+        filter_cold_items: bool = True,
+        filter_cold_users: bool = True,
     ) -> None:
 
         unit = "D"
@@ -36,18 +36,18 @@ class CrossValidator:
             filter_cold_users=filter_cold_users,
         )
 
-        print(f"""
-            start_date: {self.start_date}
-            last_date: {self.last_date}
-            periods: {periods}
-            freq: {freq}
-        """)
+        print((
+            f'start_date: {self.start_date}\n'
+            f'last_date: {self.last_date}\n'
+            f'periods: {periods}\n'
+            f'freq: {freq}\n'
+        ))
 
 
     def validate(
         self, 
-        models: Dict[str: ModelBase],
-        metrics: Dict[str: MetricAtK],
+        models: Dict[str, ModelBase],
+        metrics: Dict[str, MetricAtK],
         interactions: Interactions, 
         k_recos: int = 10,
         item_features: pd.DataFrame = None,
@@ -59,7 +59,7 @@ class CrossValidator:
         fold_iterator = self.cv.split(interactions)
         results =[]
 
-        pbar = tqdm(
+        pbar_folds = tqdm(
             enumerate(fold_iterator), 
             total=self.cv.get_n_splits(interactions), 
             desc='Fold', 
@@ -67,10 +67,22 @@ class CrossValidator:
             leave=False
         )
 
-        for i_fold, (train_ids, test_ids, _) in pbar:     
+        for i_fold, (train_ids, test_ids, _) in pbar_folds:
             df_train = interactions.df.iloc[train_ids]
-            item_features_train = item_features[item_features[Columns.Item].isin(df_train[Columns.Item])] if item_features else item_features
-            user_features_train = user_features[user_features[Columns.User].isin(df_train[Columns.User])] if user_features else user_features
+            if item_features is not None:
+                item_features_train = item_features[
+                    item_features[Columns.Item]
+                    .isin(df_train[Columns.Item])
+                ]
+            else:
+                item_features_train = None
+            
+            if user_features is not None:
+                user_features_train = user_features[
+                    user_features[Columns.User].isin(df_train[Columns.User])
+                ]
+            else: 
+                user_features_train = None
             
             dataset = Dataset.construct(
                 interactions_df=df_train,
@@ -83,7 +95,15 @@ class CrossValidator:
             df_test = interactions.df.iloc[test_ids][Columns.UserItem]
             test_users = np.unique(df_test[Columns.User])
             
-            for model_name, model in tqdm(models.items(), desc='Models', position=1, leave=False):
+            pbar_models = tqdm(
+                models.items(), 
+                desc='Models', 
+                position=1, 
+                leave=False, 
+                total=len(models)
+            )
+            for model_name, model in pbar_models:
+                pbar_models.set_description(f'Models ({model_name})')
                 model = deepcopy(model)
                 model.fit(dataset)
                 recos = model.recommend(
