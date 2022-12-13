@@ -123,4 +123,3 @@ class CrossValidator:
                 results.append(res)
             
         return pd.DataFrame(results)
-    
