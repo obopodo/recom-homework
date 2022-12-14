@@ -57,7 +57,7 @@ class CrossValidator:
     ) -> pd.DataFrame:
 
         fold_iterator = self.cv.split(interactions)
-        results =[]
+        self.results =[]
 
         pbar_folds = tqdm(
             enumerate(fold_iterator), 
@@ -104,6 +104,7 @@ class CrossValidator:
             )
             for model_name, model in pbar_models:
                 pbar_models.set_description(f'Models ({model_name})')
+                print(f'Fold: {i_fold}, Model: {model_name}')
                 model = deepcopy(model)
                 model.fit(dataset)
                 recos = model.recommend(
@@ -120,6 +121,6 @@ class CrossValidator:
                 )
                 res = {"fold": i_fold, "model": model_name}
                 res.update(metric_values)
-                results.append(res)
+                self.results.append(res)
             
-        return pd.DataFrame(results)
+        return pd.DataFrame(self.results)
