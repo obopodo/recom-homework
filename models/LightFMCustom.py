@@ -4,8 +4,6 @@ from rectools.models.base import ModelBase
 from rectools.dataset import Dataset
 
 import numpy as np
-import pandas as pd
-from scipy.sparse import csr_matrix
 from tqdm.auto import tqdm
 
 UserIDs = Sequence[int]
