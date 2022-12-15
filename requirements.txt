@@ -1,6 +1,9 @@
+annoy==1.17.1
+hnswlib==0.6.2
 implicit==0.4.4
 lightfm==1.16
 matplotlib==3.6.2
+nmslib==2.1.1
 numpy==1.23.4
 pandas==1.5.1
 rectools==0.3.0
